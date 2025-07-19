@@ -39,15 +39,21 @@ def from_hdulist(cls, hdulist, hdu1="MATRIX", hdu2="EBOUNDS"):
 
     pdf_matrix = np.zeros([len(data), header["DETCHANS"]], dtype=np.float64)
 
+    #check for TLMIN keyword to determine if indexing starts at 0 or 1:
+    try:
+        ind_offset=int(matrix_hdu.header["TLMIN*"][0])
+    except:
+        ind_offset=0
+
     for i, l in enumerate(data):
         if l.field("N_GRP"):
             m_start = 0
             for k in range(l.field("N_GRP")):
                 if np.isscalar(l.field("N_CHAN")):
-                    f_chan = l.field("F_CHAN")
+                    f_chan = l.field("F_CHAN")-ind_offset
                     n_chan = l.field("N_CHAN")
                 else:
-                    f_chan = l.field("F_CHAN")[k]
+                    f_chan = l.field("F_CHAN")[k]-ind_offset
                     n_chan = l.field("N_CHAN")[k]
                 try:
                     pdf_matrix[i, f_chan : f_chan + n_chan] = l.field("MATRIX")[m_start : m_start + n_chan]
