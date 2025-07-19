@@ -38,7 +38,7 @@ class SherpaSpectralModel(SpectralModel):
     def _update_sherpa_parameters(self, **kwargs):
         """Update sherpa model parameters"""
         for name, value in kwargs.items():
-            setattr(self.sherpa_model, name, value)
+            self.sherpa_model.pars[[x.name for x in self.sherpa_model.pars].index(name)].val=value
 
     def evaluate(self, energy, **kwargs):
         if not isinstance(energy, u.Quantity):
