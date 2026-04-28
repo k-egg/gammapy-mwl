@@ -30,3 +30,25 @@ def test_SherpaSpectralModel():
     SkyModel(spectral_model=f3)  # Test evaluate on simple geom
     with pytest.raises(AttributeError):
         SkyModel(spectral_model=f2)  # Wrong units, f2 is an absorption model
+
+def test_SherpaSpectralModel_multicomponent():
+    # test multicomponent wrapping of sherpa models
+    sherpa = pytest.importorskip("sherpa")
+
+    energy_grid = np.linspace(0.5, 10.0, 10) * u.keV
+    plaw = sherpa.models.PowLaw1D()
+    plaw.ampl = 1e-3
+    plaw.gamma = 2
+
+    abs_model = sherpa.astro.xspec.XSwabs()
+    abs_model.nH = 5
+
+    # multicomponent sherpa model:
+
+    sherpa_model = abs_model*plaw
+
+    # Gammapy wrapper
+    gammapy_model = SherpaSpectralModel(sherpa_model)
+
+    assert_allclose(gammapy_model(energy_grid).value[:-1], sherpa_model(energy_grid.value)[:-1])
+    SkyModel(spectral_model=gammapy_model)  # Test evaluate on simple geom
