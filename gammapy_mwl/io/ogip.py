@@ -41,10 +41,8 @@ def from_hdulist(cls, hdulist, hdu1="MATRIX", hdu2="EBOUNDS"):
     pdf_matrix = np.zeros([len(data), header["DETCHANS"]], dtype=np.float64)
 
     #check for TLMIN keyword to determine if indexing starts at 0 or 1:
-    try:
-        ind_offset=int(matrix_hdu.header["TLMIN*"][0])
-    except:
-        ind_offset=0
+    col_num = matrix_hdu.columns.names.index("F_CHAN") + 1
+    ind_offset = matrix_hdu.header.get(f"TLMIN{col_num}", 0)
 
     for i, l in enumerate(data):
         if l.field("N_GRP"):
