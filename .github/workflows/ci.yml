@@ -9,7 +9,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.allowed_fail }}
     env:
-      PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
+      PYTEST_ADDOPTS: --color=yes
     strategy:
       fail-fast: true
       matrix:
