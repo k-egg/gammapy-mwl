@@ -63,5 +63,5 @@ def test_SherpaSpectralModel_multicomponent():
 
     # Check that parameter names are unique
     for i in m.parameters.names:
-        if i.count > 1:
+        if m.parameters.names.count(i) > 1:
             pytest.raises(AttributeError)
