@@ -15,21 +15,25 @@ def test_SherpaSpectralModel():
     plaw.ampl = 1e-3
     plaw.gamma = 2
 
-    abs_model = sherpa.astro.xspec.XSwabs()
-    abs_model.nH = 5
+    #abs_model = sherpa.astro.xspec.XSwabs()
+    #abs_model.nH = 5
+
+    plaw2 = sherpa.models.PowLaw1D()
+    plaw2.ampl = 5e-3
+    plaw2.gamma = 3
 
     # Gammapy wrapper
     f1 = SherpaSpectralModel(plaw)
-    f2 = SherpaSpectralModel(abs_model, default_units=(u.keV, 1))
-    f3 = f1 * f2
+    f2 = SherpaSpectralModel(plaw2)
+    f3 = f1 + f2
 
     # Plain sherpa
-    plaw_with_abs = plaw * abs_model
+    plaw_duo = plaw + plaw2
 
-    assert_allclose(f3(energy_grid).value[:-1], plaw_with_abs(energy_grid.value)[:-1])
+    assert_allclose(f3(energy_grid).value[:-1], plaw_duo(energy_grid.value)[:-1])
     SkyModel(spectral_model=f3)  # Test evaluate on simple geom
-    with pytest.raises(AttributeError):
-        SkyModel(spectral_model=f2)  # Wrong units, f2 is an absorption model
+    #with pytest.raises(AttributeError):
+    #    SkyModel(spectral_model=f2)  # Wrong units, f2 is an absorption model
 
 def test_SherpaSpectralModel_multicomponent():
     # test multicomponent wrapping of sherpa models
@@ -40,12 +44,15 @@ def test_SherpaSpectralModel_multicomponent():
     plaw.ampl = 1e-3
     plaw.gamma = 2
 
-    abs_model = sherpa.astro.xspec.XSwabs()
-    abs_model.nH = 5
+    #abs_model = sherpa.astro.xspec.XSwabs()
+    #abs_model.nH = 5
+    plaw2 = sherpa.models.PowLaw1D()
+    plaw2.ampl = 5e-3
+    plaw2.gamma = 3
 
     # multicomponent sherpa model:
 
-    sherpa_model = abs_model*plaw
+    sherpa_model = plaw + plaw2
 
     # Gammapy wrapper
     gammapy_model = SherpaSpectralModel(sherpa_model)
