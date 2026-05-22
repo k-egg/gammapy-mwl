@@ -59,4 +59,9 @@ def test_SherpaSpectralModel_multicomponent():
     gammapy_model = SherpaSpectralModel(sherpa_model)
 
     assert_allclose(gammapy_model(energy_grid).value[:-1], sherpa_model(energy_grid.value)[:-1])
-    SkyModel(spectral_model=gammapy_model)  # Test evaluate on simple geom
+    m = SkyModel(spectral_model=gammapy_model)  # Test evaluate on simple geom
+
+    # Check that parameter names are unique
+    for i in m.parameters.names:
+        if i.count > 1:
+            pytest.raises(AttributeError)
