@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
-from gammapy_mwl.models.sherpa import SherpaSpectralModel
+from gammapy_mwl.models.sherpa_spectral_model import SherpaSpectralModel
 
 
 def test_SherpaSpectralModel():
