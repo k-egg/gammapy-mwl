@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy.io import fits
 from astropy.table import Table
@@ -39,15 +40,19 @@ def from_hdulist(cls, hdulist, hdu1="MATRIX", hdu2="EBOUNDS"):
 
     pdf_matrix = np.zeros([len(data), header["DETCHANS"]], dtype=np.float64)
 
+    #check for TLMIN keyword to determine if indexing starts at 0 or 1:
+    col_num = matrix_hdu.columns.names.index("F_CHAN") + 1
+    ind_offset = matrix_hdu.header.get(f"TLMIN{col_num}", 0)
+
     for i, l in enumerate(data):
         if l.field("N_GRP"):
             m_start = 0
             for k in range(l.field("N_GRP")):
                 if np.isscalar(l.field("N_CHAN")):
-                    f_chan = l.field("F_CHAN")
+                    f_chan = l.field("F_CHAN")-ind_offset
                     n_chan = l.field("N_CHAN")
                 else:
-                    f_chan = l.field("F_CHAN")[k]
+                    f_chan = l.field("F_CHAN")[k]-ind_offset
                     n_chan = l.field("N_CHAN")[k]
                 try:
                     pdf_matrix[i, f_chan : f_chan + n_chan] = l.field("MATRIX")[m_start : m_start + n_chan]

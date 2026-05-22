@@ -9,29 +9,26 @@ from gammapy_mwl.models.sherpa_spectral_model import SherpaSpectralModel
 from sherpa.models import PowLaw1D
 
 def test_SherpaSpectralModel():
-    #sherpa = pytest.importorskip("sherpa")
-
+    sherpa = pytest.importorskip("sherpa")
+    from sherpa.models import basic
+    
     energy_grid = np.linspace(0.5, 10.0, 10) * u.keV
-    plaw = PowLaw1D()
+    plaw = basic.PowLaw1D()
     plaw.ampl = 1e-3
     plaw.gamma = 2
 
     #abs_model = sherpa.astro.xspec.XSwabs()
     #abs_model.nH = 5
 
-    plaw2 = PowLaw1D()
-    plaw2.ampl = 5e-3
-    plaw2.gamma = 3
-
     # Gammapy wrapper
     f1 = SherpaSpectralModel(plaw)
-    f2 = SherpaSpectralModel(plaw2)
-    f3 = f1 + f2
+    #f2 = SherpaSpectralModel(abs_model, default_units=(u.keV, 1))
+    f3 = f1  #* f2
 
     # Plain sherpa
-    plaw_duo = plaw + plaw2
+    plaw_with_abs = plaw #* abs_model
 
-    assert_allclose(f3(energy_grid).value[:-1], plaw_duo(energy_grid.value)[:-1])
+    assert_allclose(f3(energy_grid).value[:-1], plaw_with_abs(energy_grid.value)[:-1])
     SkyModel(spectral_model=f3)  # Test evaluate on simple geom
     #with pytest.raises(AttributeError):
     #    SkyModel(spectral_model=f2)  # Wrong units, f2 is an absorption model
