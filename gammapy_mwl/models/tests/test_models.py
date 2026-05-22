@@ -6,19 +6,20 @@ import astropy.units as u
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy_mwl.models.sherpa_spectral_model import SherpaSpectralModel
 
+from sherpa.models import PowLaw1D
 
 def test_SherpaSpectralModel():
-    sherpa = pytest.importorskip("sherpa")
+    #sherpa = pytest.importorskip("sherpa")
 
     energy_grid = np.linspace(0.5, 10.0, 10) * u.keV
-    plaw = sherpa.models.PowLaw1D()
+    plaw = PowLaw1D()
     plaw.ampl = 1e-3
     plaw.gamma = 2
 
     #abs_model = sherpa.astro.xspec.XSwabs()
     #abs_model.nH = 5
 
-    plaw2 = sherpa.models.PowLaw1D()
+    plaw2 = PowLaw1D()
     plaw2.ampl = 5e-3
     plaw2.gamma = 3
 
@@ -37,16 +38,16 @@ def test_SherpaSpectralModel():
 
 def test_SherpaSpectralModel_multicomponent():
     # test multicomponent wrapping of sherpa models
-    sherpa = pytest.importorskip("sherpa")
+    #sherpa = pytest.importorskip("sherpa")
 
     energy_grid = np.linspace(0.5, 10.0, 10) * u.keV
-    plaw = sherpa.models.PowLaw1D()
+    plaw = PowLaw1D()
     plaw.ampl = 1e-3
     plaw.gamma = 2
 
     #abs_model = sherpa.astro.xspec.XSwabs()
     #abs_model.nH = 5
-    plaw2 = sherpa.models.PowLaw1D()
+    plaw2 = PowLaw1D()
     plaw2.ampl = 5e-3
     plaw2.gamma = 3
 
