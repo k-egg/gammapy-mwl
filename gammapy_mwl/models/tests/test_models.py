@@ -28,6 +28,8 @@ def test_SherpaSpectralModel():
     plaw_with_abs = plaw #* abs_model
 
     assert_allclose(f3(energy_grid).value[:-1], plaw_with_abs(energy_grid.value)[:-1])
+    assert_allclose(f3.evaluate(energy_grid,2,1,1e-3,5).value[:-1], plaw_with_abs(energy_grid.value)[:-1])
+
     SkyModel(spectral_model=f3)  # Test evaluate on simple geom
     #with pytest.raises(AttributeError):
     #    SkyModel(spectral_model=f2)  # Wrong units, f2 is an absorption model
