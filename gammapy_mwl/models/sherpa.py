@@ -27,6 +27,7 @@ class SherpaSpectralModel(SpectralModel):
 
     def _wrap_parameters(self):
         parameters = []
+        self._remove_duplicate_parameter_names()
         for par in self.sherpa_model.pars:
             parameter = Parameter(
                 name=par.name, value=par.val, frozen=par.frozen
@@ -35,10 +36,17 @@ class SherpaSpectralModel(SpectralModel):
             parameters.append(parameter)
         return Parameters(parameters)
 
+    def _remove_duplicate_parameter_names(self):
+        names = [par.name for par in self.sherpa_model.pars]
+        for i, par in enumerate(self.sherpa_model.pars):
+            if names.count(par.name)>1:
+                if names[:i+1].count(par.name)>1:
+                    par.name = par.name+str(names[:i].count(par.name))
+
     def _update_sherpa_parameters(self, **kwargs):
         """Update sherpa model parameters"""
         for name, value in kwargs.items():
-            setattr(self.sherpa_model, name, value)
+            self.sherpa_model.pars[[x.name for x in self.sherpa_model.pars].index(name)].val=value
 
     def evaluate(self, energy, *args):
         if not isinstance(energy, u.Quantity):
