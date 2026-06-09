@@ -4,14 +4,13 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
-from gammapy_mwl.models.sherpa_spectral_model import SherpaSpectralModel
+from gammapy_mwl.models.sherpa import SherpaSpectralModel
 
-from sherpa.models import PowLaw1D
 
 def test_SherpaSpectralModel():
     sherpa = pytest.importorskip("sherpa")
     from sherpa.models import basic
-    
+
     energy_grid = np.linspace(0.5, 10.0, 10) * u.keV
     plaw = basic.PowLaw1D()
     plaw.ampl = 1e-3
@@ -29,9 +28,12 @@ def test_SherpaSpectralModel():
     plaw_with_abs = plaw #* abs_model
 
     assert_allclose(f3(energy_grid).value[:-1], plaw_with_abs(energy_grid.value)[:-1])
+    assert_allclose(f3.evaluate(energy_grid,2,1,1e-3,5).value[:-1], plaw_with_abs(energy_grid.value)[:-1])
+
     SkyModel(spectral_model=f3)  # Test evaluate on simple geom
     #with pytest.raises(AttributeError):
     #    SkyModel(spectral_model=f2)  # Wrong units, f2 is an absorption model
+
 
 def test_SherpaSpectralModel_multicomponent():
     # test multicomponent wrapping of sherpa models
@@ -56,6 +58,8 @@ def test_SherpaSpectralModel_multicomponent():
     gammapy_model = SherpaSpectralModel(sherpa_model)
 
     assert_allclose(gammapy_model(energy_grid).value[:-1], sherpa_model(energy_grid.value)[:-1])
+    assert_allclose(gammapy_model.evaluate(energy_grid,2,1,1e-3,5).value[:-1], sherpa_model(energy_grid.value)[:-1])
+
     m = SkyModel(spectral_model=gammapy_model)  # Test evaluate on simple geom
 
     # Check that parameter names are unique
