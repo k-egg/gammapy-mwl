@@ -47,7 +47,7 @@ EXPECTED_SHAPES = {
         "edisp": (2056, 4096, 1, 1),
         "exposure": (2056, 1, 1),
     },
-    "/data/erosita/em01_072135_820_SourceSpec_00001_c010.fits": {
+    "data/erosita/em01_072135_820_SourceSpec_00001_c010.fits": {
         "counts": (1024,1,1),
         "acceptance": (1024,1,1),
         "counts_off": (1024,1,1),
@@ -98,7 +98,7 @@ EXPECTED_SUMS = {
         "edisp": 2056,
         "exposure": 22077673000,
     },
-    "/data/erosita/em01_072135_820_SourceSpec_00001_c010.fits": {
+    "data/erosita/em01_072135_820_SourceSpec_00001_c010.fits": {
         "counts": 6013,
         "counts_off": 3940,
         "acceptance": 3089.0511876683663,
@@ -116,7 +116,7 @@ EXPECTED_SUMS = {
         "data/xmm/mos1/xmm_mos1_0605960101_src.pha",
         "data/xmm/mos2/xmm_mos2_0605960101_src.pha",
         "data/xmm/pn/xmm_pn_0605960101_src.pha",
-        "/data/erosita/em01_072135_820_SourceSpec_00001_c010.fits",
+        "data/erosita/em01_072135_820_SourceSpec_00001_c010.fits",
         # "data/xmm/om/xmm_om_0605960101_src.pha",
         # "data/fermi/lat/fermi_lat_00036384074_src.pha",
         # "data/fermi/gbm/fermi_gbm_00036384074_src.pha",
