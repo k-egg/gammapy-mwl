@@ -2,7 +2,10 @@ import pytest
 import warnings
 from gammapy_mwl.io.ogip import StandardOGIPDatasetReader
 from gammapy.datasets import SpectrumDatasetOnOff
+from gammapy.modeling.models import Models, SkyModel, PowerLawSpectralModel
+from astropy import units as u
 from astropy.io import fits
+import numpy as np
 from numpy.testing import assert_allclose
 
 # Example template for expected shapes and sums (fill in values as needed)
@@ -181,3 +184,8 @@ def test_standard_ogip_dataset_reader_runs(pha_path):
         # Check that the exposure and livetime are read correctly from the dataset metadata
         meta = dataset.meta_table
         assert_allclose(meta["EXPOSURE"], exposure, rtol=1e-3)
+
+        # Check that the axes align and an npred can be calculated
+        m = SkyModel(spectral_model=PowerLawSpectralModel(amplitude=1*u.Unit("keV-1 cm-2 s-1"),reference=1*u.keV))
+        dataset.models=Models([m])
+        assert np.sum(dataset.npred_signal().data) > 0
