@@ -31,3 +31,54 @@ def test_SherpaSpectralModel():
     SkyModel(spectral_model=f3)  # Test evaluate on simple geom
     #with pytest.raises(AttributeError):
     #    SkyModel(spectral_model=f2)  # Wrong units, f2 is an absorption model
+
+
+def test_tbabs_model():
+    from gammapy_mwl.models.hydrogen import get_tbabs_template_model
+    
+    nh = 2e21 * u.Unit("cm-2")
+    model = get_tbabs_template_model(nh=nh)
+    
+    assert model.tag[0] == "TemplateNDSpectralModel"
+    assert_allclose(model.nH.quantity, nh)
+    assert model.nH.frozen is True
+    
+    # Test evaluation
+    energy = [1, 2, 10] * u.keV
+    transmission = model(energy)
+    assert len(transmission) == 3
+    assert np.all(transmission >= 0) and np.all(transmission <= 1)
+
+
+def test_xredden_model():
+    from gammapy_mwl.models.dustextinction import get_xredden_template_model
+    
+    ebv = 0.2
+    model = get_xredden_template_model(ebv=ebv)
+    
+    assert model.tag[0] == "TemplateNDSpectralModel"
+    assert_allclose(model.ebv.value, ebv)
+    assert model.ebv.frozen is True
+    
+    # Test evaluation
+    energy = [1, 2, 10] * u.keV
+    transmission = model(energy)
+    assert len(transmission) == 3
+    assert np.all(transmission >= 0) and np.all(transmission <= 1)
+
+
+def test_sherpa_xtbabs_model():
+    pytest.importorskip("sherpa")
+    pytest.importorskip("gammapy_ogip")
+    from gammapy_mwl.models.hydrogen import sherpa_xtbabs_model
+    
+    nh = 2e21 * u.Unit("cm-2")
+    model = sherpa_xtbabs_model(nh=nh)
+    assert model.tag == "sherpa.astro.xspec.XSTBabs"
+    
+    # Test evaluation
+    energy = [1, 2, 10] * u.keV
+    transmission = model(energy)
+    assert len(transmission) == 3
+    assert np.all(transmission >= 0) and np.all(transmission <= 1)
+

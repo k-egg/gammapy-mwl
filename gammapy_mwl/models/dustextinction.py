@@ -1,14 +1,25 @@
-"""Module to calculate Galactic dust extinction and generate/load xredden template models."""
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""Module to calculate Galactic dust extinction and generate/load xredden template models.
+
+To manually query/obtain the Galactic E(B-V) dust extinction value for a specific coordinate:
+1. Use the IRSA Dust Query tool: https://irsa.ipac.caltech.edu/applications/DUST/
+2. Use the python dustmaps package:
+   >>> from dustmaps.sfd import SFDQuery
+   >>> from astropy.coordinates import SkyCoord
+   >>> import astropy.units as u
+   >>> # First-time setup (downloading maps):
+   >>> # import dustmaps.sfd
+   >>> # dustmaps.sfd.fetch()
+   >>> sfd = SFDQuery()
+   >>> coords = SkyCoord(ra * u.deg, dec * u.deg, frame="fk5")
+   >>> ebv = sfd(coords)
+"""
 
 import logging
 from pathlib import Path
-from typing import Optional, Tuple, Union
 
 import astropy.units as u
 import numpy as np
-from astropy.coordinates import SkyCoord
-from astropy.io import fits as pyfits
-from astropy.table import Table
 
 # Gammapy 2.0+ imports
 from gammapy.maps import MapAxis, RegionNDMap
@@ -22,65 +33,11 @@ MODULE_DIR = Path(__file__).resolve().parent
 DEFAULT_XREDDEN_FILE = MODULE_DIR / "data" / "xredden_tau_factor_vs_EBV_energy.ecsv"
 
 
-def get_ebv_from_radec(ra: float, dec: float) -> float:
-    """Calculates E(B-V) dust extinction value at (RA, Dec) using dustmaps."""
-    try:
-        from dustmaps.config import config
-        from dustmaps.sfd import SFDQuery
-    except ImportError:
-        raise ImportError(
-            "The 'dustmaps' package is required for this function. "
-            "Please install it or provide E(B-V) via another method."
-        )
-
-    coords = SkyCoord(ra * u.deg, dec * u.deg, frame="fk5")
-    sfd = SFDQuery()
-    ebv = sfd(coords)
-    return float(ebv)
-
-
-def get_ra_dec(
-    infile: Optional[Union[str, Path]] = None,
-    srcname: Optional[str] = None,
-    src: Optional[SkyCoord] = None,
-) -> Tuple[float, float]:
-    """Resolves Right Ascension and Declination from file header, name, or SkyCoord."""
-    if infile is not None:
-        with pyfits.open(infile) as hdul:
-            header = hdul[0].header
-            ra = header["RA_OBJ"]
-            dec = header["DEC_OBJ"]
-    elif srcname is not None:
-        coord = SkyCoord.from_name(srcname)
-        ra, dec = coord.ra.deg, coord.dec.deg
-    elif src is not None:
-        ra, dec = src.ra.deg, src.dec.deg
-    else:
-        raise ValueError(
-            "Must specify either 'infile', 'srcname', or an astropy SkyCoord 'src'"
-        )
-
-    return ra, dec
-
-
-def get_gal_ebv(
-    infile: Optional[Union[str, Path]] = None,
-    srcname: Optional[str] = None,
-    src: Optional[SkyCoord] = None,
-) -> Optional[float]:
-    """Safely retrieves Galactic E(B-V) value; returns None if resolution fails."""
-    try:
-        ra, dec = get_ra_dec(infile=infile, srcname=srcname, src=src)
-        return get_ebv_from_radec(ra, dec)
-    except Exception as e:
-        logger.error(f"Could not retrieve Galactic E(B-V): {e}")
-        return None
-
-
-def generate_xredden_interp_table(outfile: Union[str, Path]) -> None:
+def generate_xredden_interp_table(outfile):
     """Generates the 2D interpolation ECSV table using local Sherpa/XSpec installation."""
     from gammapy_ogip.models import SherpaSpectralModel
     from sherpa.astro.xspec import XSxredden
+    from astropy.table import Table
 
     out_path = Path(outfile)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -114,15 +71,22 @@ def generate_xredden_interp_table(outfile: Union[str, Path]) -> None:
 
 
 def get_xredden_template_model(
-    xreddenfile: Optional[Union[str, Path]] = None,
-    infile: Optional[Union[str, Path]] = None,
-    srcname: Optional[str] = None,
-    src: Optional[SkyCoord] = None,
-    freeze: bool = True,
-) -> TemplateNDSpectralModel:
+    ebv=None,
+    xreddenfile=None,
+    freeze=True,
+):
     """Creates a Gammapy TemplateNDSpectralModel for dust extinction (xredden).
 
     Uses relative directory pathways to find the data files if not explicitly provided.
+
+    Parameters
+    ----------
+    ebv : float or `~astropy.units.Quantity`, optional
+        Galactic E(B-V) dust extinction. If float, dimensionless unit is assumed.
+    xreddenfile : str or `~pathlib.Path`, optional
+        Path to the interpolation ECSV file.
+    freeze : bool, optional
+        Whether to freeze the ebv parameter. Default is True.
     """
     # Use relative path if none provided
     if xreddenfile is None:
@@ -135,15 +99,16 @@ def get_xredden_template_model(
             f"Extinction template file not found at: {xreddenfile.resolve()}"
         )
 
+    from astropy.table import Table
     xredden_table = Table.read(xreddenfile, format="ascii.ecsv")
 
     # Clean multi-dimensional array extraction from ECSV columns
-    xredden_data = xredden_table.as_array()
-    xredden_data = xredden_data.view(np.float64).reshape(
-        xredden_data.shape + (-1,)
+    xredden_data = np.stack(
+        [xredden_table[col].astype(np.float64) for col in xredden_table.colnames],
+        axis=1
     )
 
-    log_ebv_array = np.asarray(xredden_table.meta["log10_EBV_values"])
+    ebv_array = np.asarray(xredden_table.meta["ebv_values"])
     log_en_array = np.asarray(xredden_table.meta["log10_E_values"])
 
     # Node mappings optimized for Gammapy 2.0+ 
@@ -152,7 +117,7 @@ def get_xredden_template_model(
         10**log_en_array * u.keV, name="energy_true", interp="log"
     )
     ebv_axis = MapAxis.from_nodes(
-        10**log_ebv_array * u.dimensionless_unscaled, name="ebv", interp="log"
+        ebv_array * u.dimensionless_unscaled, name="ebv", interp="linear"
     )
 
     # Convert optical depth to transmission safely
@@ -164,3 +129,20 @@ def get_xredden_template_model(
         axes=[energy_axis, ebv_axis],
         data=transmission,
     )
+
+    template_abs_model = TemplateNDSpectralModel(
+        map=region_ndmap,
+        interp_kwargs={"method": "linear", "fill_value": 1e-5},
+    )
+
+    # Handle parameters assignment safely
+    if ebv is not None:
+        template_abs_model.ebv.quantity = u.Quantity(ebv, u.dimensionless_unscaled)
+        if freeze:
+            template_abs_model.ebv.frozen = True
+    else:
+        logger.warning(
+            "Generating generic template absorption model with default EBV parameters."
+        )
+
+    return template_abs_model

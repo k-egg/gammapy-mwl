@@ -1,15 +1,17 @@
-"""Module to calculate Galactic HI column density (nH) and generate/load TBabs absorption models."""
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""Module to calculate Galactic HI column density (nH) and generate/load TBabs absorption models.
+
+To manually query/obtain the Galactic HI column density (nH) value for a specific coordinate:
+1. Use the Swift NH tool: https://www.swift.ac.uk/analysis/nhtot/
+2. Use HEASARC's NH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
+3. Use the nH tool within the astropy/astroquery package (e.g. astroquery.heasarc).
+"""
 
 import logging
 from pathlib import Path
-from typing import Optional, Tuple, Union
 
 import astropy.units as u
 import numpy as np
-import requests
-from astropy.coordinates import SkyCoord
-from astropy.io import fits as pyfits
-from astropy.table import Table
 
 # Gammapy 2.0+ imports
 from gammapy.maps import MapAxis, RegionNDMap
@@ -22,102 +24,24 @@ logger = logging.getLogger(__name__)
 MODULE_DIR = Path(__file__).resolve().parent
 DEFAULT_TBABS_FILE = MODULE_DIR / "data" / "tbabs_tau_factor_vs_nH_energy.ecsv"
 
-SWIFT_URL = "https://www.swift.ac.uk/analysis/nhtot/donhtot.php"
 
-
-def parse_response(html_response: str) -> float:
-    """Parses Swift's HTML response and extracts the weighted total NH value."""
-    akey = "headers='htotw'>"
-    try:
-        a = html_response.index(akey) + len(akey)
-        # Find the end tag or next marker cleanly
-        l = html_response[a:].index("</td>")
-        part = html_response[a : a + l].strip()
-
-        if "×10" in part:
-            base, expo = part.split(" ×10")
-            # Handle superscripts if present in raw html strings
-            expo = (
-                expo.replace("<sup>", "")
-                .replace("</sup>", "")
-                .replace(" ", "")
-            )
-            return float(base) * 10 ** float(expo)
-        return float(part)
-    except (ValueError, IndexError) as e:
-        raise ValueError(
-            f"Failed to parse NH value from HTML response. Error: {e}"
-        )
-
-
-def get_gal_nh_from_radec(ra: float, dec: float) -> float:
-    """Queries swift.ac.uk for the total NH value at (RA, Dec) in degrees."""
-    payload = {
-        "equinox": 2000,
-        "Coords": f"{ra} {dec}",
-        "submit": "Calculate NH",
-    }
-    response = requests.post(SWIFT_URL, data=payload, timeout=15)
-    response.raise_for_status()
-    return parse_response(response.text)
-
-
-def get_ra_dec(
-    infile: Optional[Union[str, Path]] = None,
-    srcname: Optional[str] = None,
-    src: Optional[SkyCoord] = None,
-) -> Tuple[float, float]:
-    """Resolves Right Ascension and Declination from file header, name, or SkyCoord."""
-    if infile is not None:
-        with pyfits.open(infile) as hdul:
-            header = hdul[0].header
-            ra = header["RA_OBJ"]
-            dec = header["DEC_OBJ"]
-    elif srcname is not None:
-        coord = SkyCoord.from_name(srcname)
-        ra, dec = coord.ra.deg, coord.dec.deg
-    elif src is not None:
-        ra, dec = src.ra.deg, src.dec.deg
-    else:
-        raise ValueError(
-            "Must specify either 'infile', 'srcname', or an astropy SkyCoord 'src'"
-        )
-
-    return ra, dec
-
-
-def get_gal_nh(
-    infile: Optional[Union[str, Path]] = None,
-    srcname: Optional[str] = None,
-    src: Optional[SkyCoord] = None,
-) -> Optional[float]:
-    """Safely retrieves Galactic NH column density; returns None if resolution fails."""
-    try:
-        ra, dec = get_ra_dec(infile=infile, srcname=srcname, src=src)
-        return get_gal_nh_from_radec(ra, dec)
-    except Exception as e:
-        logger.error(f"Could not retrieve Galactic nH: {e}")
-        return None
-
-
-def sherpa_xtbabs_model(
-    infile: Optional[Union[str, Path]] = None,
-    srcname: Optional[str] = None,
-    src: Optional[SkyCoord] = None,
-):
+def sherpa_xtbabs_model(nh):
     """Generates a wrapper around Sherpa's XSTBabs model.
 
     Requires 'sherpa' and 'gammapy_ogip' packages to be installed.
+
+    Parameters
+    ----------
+    nh : float or `~astropy.units.Quantity`
+        Galactic HI column density. If float, cm-2 unit is assumed.
     """
     from gammapy_ogip.models import SherpaSpectralModel
     from sherpa.astro.xspec import XSTBabs
 
-    nhgal = get_gal_nh(infile, srcname, src)
-    if nhgal is None:
-        raise ValueError("Cannot initialize Sherpa model without valid nH.")
+    nh_quantity = u.Quantity(nh, "cm-2")
 
     abs_model = XSTBabs()
-    abs_model.nh = nhgal / 1e22
+    abs_model.nh = nh_quantity.value / 1e22
     abs_model.nh.frozen = True
 
     sherpa_wrapped = SherpaSpectralModel(abs_model, default_units=(u.keV, 1))
@@ -125,7 +49,7 @@ def sherpa_xtbabs_model(
     return sherpa_wrapped
 
 
-def generate_tbabs_interp_table(outfile: Union[str, Path]) -> None:
+def generate_tbabs_interp_table(outfile):
     """Generates the 2D interpolation ECSV table using local Sherpa/XSpec installation."""
     from gammapy_ogip.models import SherpaSpectralModel
     from sherpa.astro.xspec import XSTBabs
@@ -162,15 +86,22 @@ def generate_tbabs_interp_table(outfile: Union[str, Path]) -> None:
 
 
 def get_tbabs_template_model(
-    tbabsfile: Optional[Union[str, Path]] = None,
-    infile: Optional[Union[str, Path]] = None,
-    srcname: Optional[str] = None,
-    src: Optional[SkyCoord] = None,
-    freeze: bool = True,
-) -> TemplateNDSpectralModel:
+    nh=None,
+    tbabsfile=None,
+    freeze=True,
+):
     """Creates a Gammapy TemplateNDSpectralModel for TBabs absorption.
 
     Uses relative directory pathways to find the data files if not explicitly provided.
+
+    Parameters
+    ----------
+    nh : float or `~astropy.units.Quantity`, optional
+        Galactic HI column density. If float, cm-2 unit is assumed.
+    tbabsfile : str or `~pathlib.Path`, optional
+        Path to the interpolation ECSV file.
+    freeze : bool, optional
+        Whether to freeze the nH parameter. Default is True.
     """
     # Use relative path if none provided
     if tbabsfile is None:
@@ -183,11 +114,14 @@ def get_tbabs_template_model(
             f"Absorption template file not found at: {tbabsfile.resolve()}"
         )
 
+    from astropy.table import Table
     tbabs_table = Table.read(tbabsfile, format="ascii.ecsv")
 
     # Clean multi-dimensional array extraction from ECSV columns
-    tbabs_data = tbabs_table.as_array()
-    tbabs_data = tbabs_data.view(np.float64).reshape(tbabs_data.shape + (-1,))
+    tbabs_data = np.stack(
+        [tbabs_table[col].astype(np.float64) for col in tbabs_table.colnames],
+        axis=1
+    )
 
     log_nh_array_20 = np.asarray(tbabs_table.meta["log10_nH_values"])
     log_en_array = np.asarray(tbabs_table.meta["log10_E_values"])
@@ -216,9 +150,8 @@ def get_tbabs_template_model(
     )
 
     # Handle parameters assignment safely
-    nhgal = get_gal_nh(infile, srcname, src)
-    if nhgal is not None:
-        template_abs_model.nH.quantity = nhgal * u.Unit("cm-2")
+    if nh is not None:
+        template_abs_model.nH.quantity = u.Quantity(nh, "cm-2")
         if freeze:
             template_abs_model.nH.frozen = True
     else:
