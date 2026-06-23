@@ -2,7 +2,10 @@ import pytest
 import warnings
 from gammapy_mwl.io.ogip import StandardOGIPDatasetReader
 from gammapy.datasets import SpectrumDatasetOnOff
+from gammapy.modeling.models import Models, SkyModel, PowerLawSpectralModel
+from astropy import units as u
 from astropy.io import fits
+import numpy as np
 from numpy.testing import assert_allclose
 
 # Example template for expected shapes and sums (fill in values as needed)
@@ -47,6 +50,14 @@ EXPECTED_SHAPES = {
         "edisp": (2056, 4096, 1, 1),
         "exposure": (2056, 1, 1),
     },
+    "data/erosita/em01_072135_820_SourceSpec_00001_c010.fits": {
+        "counts": (1024,1,1),
+        "acceptance": (1024,1,1),
+        "counts_off": (1024,1,1),
+        "acceptance_off": (1024,1,1),
+        "edisp": (1024, 1024, 1, 1),
+        "exposure": (1024, 1, 1),
+    },
 }
 
 EXPECTED_SUMS = {
@@ -90,6 +101,14 @@ EXPECTED_SUMS = {
         "edisp": 2056,
         "exposure": 22077673000,
     },
+    "data/erosita/em01_072135_820_SourceSpec_00001_c010.fits": {
+        "counts": 6013,
+        "counts_off": 3940,
+        "acceptance": 3089.0511876683663,
+        "acceptance_off": 248401.46840409856,
+        "edisp": 1024,
+        "exposure": 91403235.31326437,
+    },
 }
 
 @pytest.mark.parametrize(
@@ -100,6 +119,7 @@ EXPECTED_SUMS = {
         "data/xmm/mos1/xmm_mos1_0605960101_src.pha",
         "data/xmm/mos2/xmm_mos2_0605960101_src.pha",
         "data/xmm/pn/xmm_pn_0605960101_src.pha",
+        "data/erosita/em01_072135_820_SourceSpec_00001_c010.fits",
         # "data/xmm/om/xmm_om_0605960101_src.pha",
         # "data/fermi/lat/fermi_lat_00036384074_src.pha",
         # "data/fermi/gbm/fermi_gbm_00036384074_src.pha",
@@ -164,3 +184,8 @@ def test_standard_ogip_dataset_reader_runs(pha_path):
         # Check that the exposure and livetime are read correctly from the dataset metadata
         meta = dataset.meta_table
         assert_allclose(meta["EXPOSURE"], exposure, rtol=1e-3)
+
+        # Check that the axes align and an npred can be calculated
+        m = SkyModel(spectral_model=PowerLawSpectralModel(amplitude=1*u.Unit("keV-1 cm-2 s-1"),reference=1*u.keV))
+        dataset.models=Models([m])
+        assert np.sum(dataset.npred_signal().data) > 0

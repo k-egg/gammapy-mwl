@@ -346,4 +346,7 @@ class StandardOGIPDatasetReader:
             meta_table=pha_table.meta,
         )
 
+        if "livetime" not in dataset.exposure.meta:
+           dataset.exposure.meta['livetime'] = data["livetime"]
+
         return dataset
