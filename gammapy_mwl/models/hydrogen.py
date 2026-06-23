@@ -28,14 +28,14 @@ DEFAULT_TBABS_FILE = MODULE_DIR / "data" / "tbabs_tau_factor_vs_nH_energy.ecsv"
 def sherpa_xtbabs_model(nh):
     """Generates a wrapper around Sherpa's XSTBabs model.
 
-    Requires 'sherpa' and 'gammapy_ogip' packages to be installed.
+    Requires 'sherpa' package to be installed.
 
     Parameters
     ----------
     nh : float or `~astropy.units.Quantity`
         Galactic HI column density. If float, cm-2 unit is assumed.
     """
-    from gammapy_ogip.models import SherpaSpectralModel
+    from gammapy_mwl.models.sherpa import SherpaSpectralModel
     from sherpa.astro.xspec import XSTBabs
 
     nh_quantity = u.Quantity(nh, "cm-2")
@@ -51,7 +51,7 @@ def sherpa_xtbabs_model(nh):
 
 def generate_tbabs_interp_table(outfile):
     """Generates the 2D interpolation ECSV table using local Sherpa/XSpec installation."""
-    from gammapy_ogip.models import SherpaSpectralModel
+    from gammapy_mwl.models.sherpa import SherpaSpectralModel
     from sherpa.astro.xspec import XSTBabs
 
     out_path = Path(outfile)

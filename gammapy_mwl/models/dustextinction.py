@@ -33,9 +33,33 @@ MODULE_DIR = Path(__file__).resolve().parent
 DEFAULT_XREDDEN_FILE = MODULE_DIR / "data" / "xredden_tau_factor_vs_EBV_energy.ecsv"
 
 
+def sherpa_xredden_model(ebv):
+    """Generates a wrapper around Sherpa's XSxredden model.
+
+    Requires 'sherpa' package to be installed.
+
+    Parameters
+    ----------
+    ebv : float or `~astropy.units.Quantity`
+        Galactic E(B-V) dust extinction. If float, dimensionless unit is assumed.
+    """
+    from gammapy_mwl.models.sherpa import SherpaSpectralModel
+    from sherpa.astro.xspec import XSxredden
+
+    ebv_quantity = u.Quantity(ebv, u.dimensionless_unscaled)
+
+    abs_model = XSxredden()
+    abs_model.E_B_V = ebv_quantity.value
+    abs_model.E_B_V.frozen = True
+
+    sherpa_wrapped = SherpaSpectralModel(abs_model, default_units=(u.keV, 1))
+    sherpa_wrapped.tag = "sherpa.astro.xspec.XSxredden"
+    return sherpa_wrapped
+
+
 def generate_xredden_interp_table(outfile):
     """Generates the 2D interpolation ECSV table using local Sherpa/XSpec installation."""
-    from gammapy_ogip.models import SherpaSpectralModel
+    from gammapy_mwl.models.sherpa import SherpaSpectralModel
     from sherpa.astro.xspec import XSxredden
     from astropy.table import Table
 
