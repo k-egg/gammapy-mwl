@@ -133,6 +133,8 @@ def test_sherpa_xredden_vs_table():
 
     # Values should agree to within 5% (interpolation residuals are expected)
     assert_allclose(t_sherpa, t_table, rtol=0.05)
+
+
 def test_SherpaSpectralModel_multicomponent():
     # test multicomponent wrapping of sherpa models
     sherpa = pytest.importorskip("sherpa")
