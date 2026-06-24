@@ -35,6 +35,77 @@ def test_SherpaSpectralModel():
     #    SkyModel(spectral_model=f2)  # Wrong units, f2 is an absorption model
 
 
+def test_tbabs_model():
+    from gammapy_mwl.models.hydrogen import get_tbabs_template_model
+    
+    nh = 2e21 * u.Unit("cm-2")
+    model = get_tbabs_template_model(nh=nh)
+    
+    assert model.tag[0] == "TemplateNDSpectralModel"
+    assert_allclose(model.nH.quantity, nh)
+    assert model.nH.frozen is True
+    
+    # Test evaluation
+    energy = [1, 2, 10] * u.keV
+    transmission = model(energy)
+    assert len(transmission) == 3
+    assert np.all(transmission >= 0) and np.all(transmission <= 1)
+
+
+def test_xredden_model():
+    from gammapy_mwl.models.dustextinction import get_xredden_template_model
+    
+    ebv = 0.2
+    model = get_xredden_template_model(ebv=ebv)
+    
+    assert model.tag[0] == "TemplateNDSpectralModel"
+    assert_allclose(model.ebv.value, ebv)
+    assert model.ebv.frozen is True
+    
+    # Test evaluation
+    energy = [1, 2, 10] * u.keV
+    transmission = model(energy)
+    assert len(transmission) == 3
+    assert np.all(transmission >= 0) and np.all(transmission <= 1)
+
+
+@pytest.mark.skip(reason="Xspec models not in CI yet")
+def test_sherpa_tbabs_vs_table():
+    """Check that the Sherpa XSTBabs model broadly agrees with the interpolation table."""
+    pytest.importorskip("sherpa")
+    from gammapy_mwl.models.hydrogen import sherpa_xtbabs_model, get_tbabs_template_model
+
+    nh = 2e21 * u.Unit("cm-2")
+    sherpa_model = sherpa_xtbabs_model(nh=nh)
+    table_model = get_tbabs_template_model(nh=nh)
+
+    # Test on a grid away from the boundaries to avoid interpolation edge effects
+    energy = np.logspace(np.log10(0.3), np.log10(10), 20) * u.keV
+    t_sherpa = sherpa_model(energy).value
+    t_table = table_model(energy).value
+
+    # Values should agree to within 5% (interpolation residuals are expected)
+    assert_allclose(t_sherpa, t_table, rtol=0.05)
+
+@pytest.mark.skip(reason="Xspec models not in CI yet")
+def test_sherpa_xredden_vs_table():
+    """Check that the Sherpa XSxredden model broadly agrees with the interpolation table."""
+    pytest.importorskip("sherpa")
+    from gammapy_mwl.models.dustextinction import sherpa_xredden_model, get_xredden_template_model
+
+    ebv = 0.2
+    sherpa_model = sherpa_xredden_model(ebv=ebv)
+    table_model = get_xredden_template_model(ebv=ebv)
+
+    # Test on a grid away from the boundaries to avoid interpolation edge effects
+    energy = np.logspace(np.log10(0.3), np.log10(10), 20) * u.keV
+    t_sherpa = sherpa_model(energy).value
+    t_table = table_model(energy).value
+
+    # Values should agree to within 5% (interpolation residuals are expected)
+    assert_allclose(t_sherpa, t_table, rtol=0.05)
+
+
 def test_SherpaSpectralModel_multicomponent():
     # test multicomponent wrapping of sherpa models
     sherpa = pytest.importorskip("sherpa")
