@@ -25,32 +25,10 @@ MODULE_DIR = Path(__file__).resolve().parent
 DEFAULT_TBABS_FILE = MODULE_DIR / "data" / "tbabs_tau_factor_vs_nH_energy.ecsv"
 
 
-def sherpa_xtbabs_model(nh):
-    """Generates a wrapper around Sherpa's XSTBabs model.
-
-    Requires 'sherpa' package to be installed.
-
-    Parameters
-    ----------
-    nh : float or `~astropy.units.Quantity`
-        Galactic HI column density. If float, cm-2 unit is assumed.
-    """
-    from gammapy_mwl.models.sherpa import SherpaSpectralModel
-    from sherpa.astro.xspec import XSTBabs
-
-    nh_quantity = u.Quantity(nh, "cm-2")
-
-    abs_model = XSTBabs()
-    abs_model.nh = nh_quantity.value / 1e22
-    abs_model.nh.frozen = True
-
-    sherpa_wrapped = SherpaSpectralModel(abs_model, default_units=(u.keV, 1))
-    sherpa_wrapped.tag = "sherpa.astro.xspec.XSTBabs"
-    return sherpa_wrapped
-
-
 def generate_tbabs_interp_table(outfile):
-    """Generates the 2D interpolation ECSV table using local Sherpa/XSpec installation."""
+    """Generates the 2D interpolation ECSV table using local Sherpa/XSpec installation.
+    The default model is Tbabs (Wilms et al 2000, doi: 10.1086/317016). 
+    """
     from gammapy_mwl.models.sherpa import SherpaSpectralModel
     from sherpa.astro.xspec import XSTBabs
 
@@ -90,8 +68,8 @@ def get_tbabs_template_model(
     tbabsfile=None,
     freeze=True,
 ):
-    """Creates a Gammapy TemplateNDSpectralModel for TBabs absorption.
-
+    """Creates a Gammapy TemplateNDSpectralModel from a pregenerated table of absorption.
+    The default model is Tbabs (Wilms et al 2000, doi: 10.1086/317016).
     Uses relative directory pathways to find the data files if not explicitly provided.
 
     Parameters
