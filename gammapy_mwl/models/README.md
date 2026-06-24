@@ -46,7 +46,6 @@ cross-sections (Wilms et al. 2000).
 
 | Function | Description |
 |---|---|
-| `sherpa_xtbabs_model(nh)` | Live Sherpa `XSTBabs` wrapper |
 | `generate_tbabs_interp_table(outfile)` | Regenerate the reference ECSV table |
 | `get_tbabs_template_model(nh, ...)` | Load the table as a `TemplateNDSpectralModel` |
 
@@ -67,7 +66,6 @@ Optical/UV/soft-X-ray extinction by Galactic dust, based on Sherpa's
 
 | Function | Description |
 |---|---|
-| `sherpa_xredden_model(ebv)` | Live Sherpa `XSxredden` wrapper |
 | `generate_xredden_interp_table(outfile)` | Regenerate the reference ECSV table |
 | `get_xredden_template_model(ebv, ...)` | Load the table as a `TemplateNDSpectralModel` |
 
@@ -101,24 +99,3 @@ The E(B-V) reddening grid spans 10⁻⁴–10¹·⁵ mag and the energy grid cov
   ebv = sfd(coords)
   ```
 
----
-
-## Credits and acknowledgements
-
-This subpackage was developed within the `gammapy-mwl` project. The following
-people have contributed:
-
-- **Fabio Acero** ([@facero](https://github.com/facero)) — development
-- **Mireia Nievas Rosillo** ([@mireianievas](https://github.com/mireianievas)) — development
-
-The implementation builds on ideas and code from
-[`gammapyXray`](https://github.com/gammapy/gammapy-ogip-spectra):
-
-- **Luca Giunti** ([@luca-giunti](https://github.com/luca-giunti)) — original `gammapyXray`
-- **Régis Terrier** ([@registerrier](https://github.com/registerrier)) — original `gammapyXray`
-- **Bruno Khélifi** ([@bkhelifi](https://github.com/bkhelifi)) — validation
-
-The `SherpaSpectralModel` wrapper in [`sherpa.py`](sherpa.py) was inspired by
-work from:
-
-- **Katharina Egg** ([@k-egg](https://github.com/k-egg))
