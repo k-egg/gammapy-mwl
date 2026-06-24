@@ -21,40 +21,14 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
-# Gammapy 2.0+ imports
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling.models import TemplateNDSpectralModel
 
-# Setup logger for professional feedback instead of print statements
 logger = logging.getLogger(__name__)
 
 # Determine paths relative to this file's location
 MODULE_DIR = Path(__file__).resolve().parent
 DEFAULT_XREDDEN_FILE = MODULE_DIR / "data" / "xredden_tau_factor_vs_EBV_energy.ecsv"
-
-
-def sherpa_xredden_model(ebv):
-    """Generates a wrapper around Sherpa's XSxredden model.
-
-    Requires 'sherpa' package to be installed.
-
-    Parameters
-    ----------
-    ebv : float or `~astropy.units.Quantity`
-        Galactic E(B-V) dust extinction. If float, dimensionless unit is assumed.
-    """
-    from gammapy_mwl.models.sherpa import SherpaSpectralModel
-    from sherpa.astro.xspec import XSxredden
-
-    ebv_quantity = u.Quantity(ebv, u.dimensionless_unscaled)
-
-    abs_model = XSxredden()
-    abs_model.E_B_V = ebv_quantity.value
-    abs_model.E_B_V.frozen = True
-
-    sherpa_wrapped = SherpaSpectralModel(abs_model, default_units=(u.keV, 1))
-    sherpa_wrapped.tag = "sherpa.astro.xspec.XSxredden"
-    return sherpa_wrapped
 
 
 def generate_xredden_interp_table(outfile):
@@ -126,7 +100,6 @@ def get_xredden_template_model(
     from astropy.table import Table
     xredden_table = Table.read(xreddenfile, format="ascii.ecsv")
 
-    # Clean multi-dimensional array extraction from ECSV columns
     xredden_data = np.stack(
         [xredden_table[col].astype(np.float64) for col in xredden_table.colnames],
         axis=1
@@ -135,7 +108,6 @@ def get_xredden_template_model(
     ebv_array = np.asarray(xredden_table.meta["ebv_values"])
     log_en_array = np.asarray(xredden_table.meta["log10_E_values"])
 
-    # Node mappings optimized for Gammapy 2.0+ 
     # Note: Named the map axes 'energy_true' and 'ebv' to keep parameters logical
     energy_axis = MapAxis.from_nodes(
         10**log_en_array * u.keV, name="energy_true", interp="log"
@@ -159,7 +131,6 @@ def get_xredden_template_model(
         interp_kwargs={"method": "linear", "fill_value": 1e-5},
     )
 
-    # Handle parameters assignment safely
     if ebv is not None:
         template_abs_model.ebv.quantity = u.Quantity(ebv, u.dimensionless_unscaled)
         if freeze:
