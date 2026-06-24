@@ -13,11 +13,9 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
-# Gammapy 2.0+ imports
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling.models import TemplateNDSpectralModel
 
-# Setup logger for cleaner professional feedback instead of print statements
 logger = logging.getLogger(__name__)
 
 # Determine paths relative to this file's location
@@ -104,7 +102,6 @@ def get_tbabs_template_model(
     log_nh_array_20 = np.asarray(tbabs_table.meta["log10_nH_values"])
     log_en_array = np.asarray(tbabs_table.meta["log10_E_values"])
 
-    # Node mappings for Gammapy 2.0+
     energy_axis = MapAxis.from_nodes(
         10**log_en_array * u.keV, name="energy_true", interp="log"
     )
@@ -127,7 +124,6 @@ def get_tbabs_template_model(
         interp_kwargs={"method": "linear", "fill_value": 1e-5},
     )
 
-    # Handle parameters assignment safely
     if nh is not None:
         template_abs_model.nH.quantity = u.Quantity(nh, "cm-2")
         if freeze:
