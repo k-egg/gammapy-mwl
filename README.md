@@ -1,40 +1,23 @@
-Caveat: this is a work in progress. More details and examples will be added here
+work in progress. More details and examples will be added here.
 
 Gammapy-mwl 
 =======
-A Python tool for the analysis of Gamma-ray and MWL data in a unified framework, using physically-motivated spectral models.
-
-## What this package can do and can not do 
-
-TBC
-
+A Python package to enhance the capacities of gammapy to support more data format and telescopes in particular from X-ray observatories.
+This adds the support to read X-ray spectral data and provides an interface to link with X-ray spectral Xspec models via sherpa (optional dependency).
 
 
 ## Installation and Set-up
 
-These instructions assume that you have previously installed a version of `conda` or `mamba` on your machine.
-To set-up the work environment with conda::
+These instructions assume that you have previously installed a version of gammapy (>= 2.1).
+See installation instructions [here](https://docs.gammapy.org/2.1/getting-started/index.html#recommended-setup).
 
-## Create the environment 
+## Install the package 
 ```
-  conda create -n gammapy-mwl-0.1
-  conda activate gammapy-mwl-0.1
-  conda install -c https://cxc.cfa.harvard.edu/conda/ciao -c conda-forge ciao sherpa
-  conda install -c conda-forge gammapy
+pip install gammapy-mwl 
 ```
 
-## Clone the repository
-```
-git clone https://github.com/yourusername/gammapy-mwl.git
-cd gammapy-mwl
-```
-## Install the package (editable mode for development)
-```
-pip install -e .
-```
+Additionally, if you wish to add the support for X-ray models, you will need to install sherpa separately. If you want sherpa Xspec models, you will need to install `xspec_models`.
 
-Additionally, if you wish to combine the absorption models provided in Sherpa with the physical models provided by Naima, you have to `install Naima <https://naima.readthedocs.io/en/latest/installation.html>`_.
-TBD: show how this is done!
 
 
 
@@ -48,25 +31,14 @@ If you use gammapyXray for work/research presented in a publication (whether dir
 
 ???
 
-We encourage you to also include citations to the paper in the main text
-wherever appropriate, using the recommended BibTeX entry:
+We encourage you to also include citations to the gammapy paper in the main text
+wherever appropriate, using the recommended BibTeX entry shown in the [gammapy docs](https://gammapy.org/acknowledging.html).
 
 
 Licence
 +++++++
 This folder is licensed under a 3-clause BSD style license - see the
 `LICENSE.rst <https://github.com/gammapy/gammapy/blob/master/LICENSE.rst>`_ file.
-
-.. image:: https://anaconda.org/conda-forge/gammapy/badges/license.svg
-    :target: TBD
-    :alt: Licence
-
-
-
-
-
-
-
 
 
 --------OLDER NOTES FOR LATER--------------
