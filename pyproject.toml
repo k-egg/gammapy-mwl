@@ -13,7 +13,9 @@ readme = { file = "README.rst", content-type = "text/x-rst" }
 license = { file = "licenses/LICENSE.rst" }
 dependencies = [
     "gammapy>=2.1",
-    "numpy"
+    "regions<0.12",
+    "astropy<8.0",
+    "scipy<1.18",
 ]
 dynamic = ["version"]
 
