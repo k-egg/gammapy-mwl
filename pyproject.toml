@@ -12,8 +12,7 @@ requires-python = ">=3.12"
 readme = { file = "README.rst", content-type = "text/x-rst" }
 license = { file = "licenses/LICENSE.rst" }
 dependencies = [
-    "gammapy>=2.1",
-    "numpy"
+    "gammapy>=2.1"
 ]
 dynamic = ["version"]
 
