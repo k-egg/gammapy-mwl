@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    if: github.repository_owner == 'gammapy-mwl'
+    if: github.repository_owner == 'gammapy'
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@v2
     with:
       save_artifacts: true
