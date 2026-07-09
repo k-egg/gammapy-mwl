@@ -19,17 +19,7 @@ pip install gammapy-mwl
 Additionally, if you wish to add the support for X-ray models, you will need to install sherpa separately. If you want sherpa Xspec models, you will need to install `xspec_models`.
 
 
-
-
-Citing
-+++++++++++++++++++++++++++++++++++++++++++++
-
-A software description is provided in the following publication: TBD
-
-
-If you use gammapyXray for work/research presented in a publication (whether directly, or as a dependency to another package), we ask that you please cite it using the following links
-
-???
+## Citing
 
 We encourage you to also include citations to the gammapy paper in the main text
 wherever appropriate, using the recommended BibTeX entry shown in the [gammapy docs](https://gammapy.org/acknowledging.html).
