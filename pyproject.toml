@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gammapy_mwl"
-description = "Tools to support using data products of various instruments in the gammapy modeling and fitting framework"
+description = "Package complementary to gammapy to support more instruments and in particular X-rays telescopes."
 requires-python = ">=3.12"
 readme = { file = "README.rst", content-type = "text/x-rst" }
 license = { file = "licenses/LICENSE.rst" }
