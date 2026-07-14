@@ -11,6 +11,9 @@ class SherpaSpectralModel(SpectralModel):
     ----------
     sherpa_model :
         An instance of the models defined in `~sherpa.models` or `~sherpa.astro.xspec`.
+    integrated:
+        Set to True for correct evaluation of additive XSpec models or more-component models containing an additive model
+        (e.g. apec, powerlaw, TBabs*apec). False for other models (e.g. PowLaw1D, TBabs). Default is False.
     default_units : tuple
         Units of the input energy array and output model evaluation (find them in the sherpa/xspec docs!)
     """
