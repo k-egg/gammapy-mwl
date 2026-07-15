@@ -12,8 +12,10 @@ class SherpaSpectralModel(SpectralModel):
     sherpa_model :
         An instance of the models defined in `~sherpa.models` or `~sherpa.astro.xspec`.
     integrated:
-        Set to True for correct evaluation of additive XSpec models or more-component models containing an additive model
-        (e.g. apec, powerlaw, TBabs*apec). False for other models (e.g. PowLaw1D, TBabs). Default is False.
+        Set to True for correct evaluation of `sherpa.astro.xspec.XSAdditiveModel` models (additive XSpec models)
+        or more-component models containing an additive XSpec model (e.g. apec, TBabs*apec).
+        False for other models, such as `sherpa.models.basic` (e.g. PowLaw1D)
+        or `sherpa.astro.xspec.XSMultiplicativeModel` models (e.g. TBabs). Default is True.
     default_units : tuple
         Units of the input energy array and output model evaluation (find them in the sherpa/xspec docs!)
     """
@@ -21,7 +23,7 @@ class SherpaSpectralModel(SpectralModel):
     tag = ["SherpaSpectralModel", "sherpa", "xspec"]
 
     def __init__(
-        self, sherpa_model, integrated=False, default_units=(u.keV, 1 / (u.keV * u.cm ** 2 * u.s))
+        self, sherpa_model, integrated=True, default_units=(u.keV, 1 / (u.keV * u.cm ** 2 * u.s))
     ):
         self.sherpa_model = sherpa_model
         self.integrated = integrated
